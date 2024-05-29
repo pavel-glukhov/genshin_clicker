@@ -1,0 +1,5 @@
+/sessions/
+/venv/
+/.env
+/geckodriver.exe
+/run.bat
