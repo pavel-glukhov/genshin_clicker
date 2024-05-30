@@ -12,4 +12,4 @@
 ### Запуск Бота:
  - добавить токен в .env по шаблону .env.example
  - Установить Docker
- - Выполнить docker compose up
+ - Выполнить - docker compose up
