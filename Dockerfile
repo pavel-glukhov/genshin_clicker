@@ -16,5 +16,3 @@ RUN rm chromedriver-linux64.zip
 RUN rm -R chromedriver-linux64
 RUN pip install --upgrade setuptools
 RUN pip install -r requirements.txt --no-cache-dir
-CMD python main.py
-

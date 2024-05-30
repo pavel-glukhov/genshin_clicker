@@ -1,0 +1,16 @@
+version: '3.10'
+
+services:
+  genshin_clicker_bot:
+    build: .
+    restart: always
+    command: "python main.py"
+    volumes:
+      - sessions_value:/code/sessions/
+    environment:
+      - TZ=Asia/Almaty
+    env_file:
+      - .env
+
+volumes:
+  sessions_value:
