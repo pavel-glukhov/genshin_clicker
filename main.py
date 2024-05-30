@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 
-from telebot import custom_filters, asyncio_filters
+from telebot import asyncio_filters
 
 from src.bot import bot
 from src.store.scheduler import scheduler
@@ -27,3 +27,4 @@ if __name__ == "__main__":
         asyncio.run(bot.polling(skip_pending=True))
     except KeyboardInterrupt:
         logger.info('The bot has been stopped.')
+        bot.stop_polling()

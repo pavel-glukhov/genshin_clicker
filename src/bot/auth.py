@@ -28,8 +28,8 @@ async def start_login(message: types.Message):
                         task_func=get_award)
         
         await bot.send_message(chat_id=chat_id,
-                         text='Вы уже авторизованы',
-                         reply_markup=create_reply_keyboard_buttons(message))
+                               text='Вы уже авторизованы',
+                               reply_markup=create_reply_keyboard_buttons(message))
         return None
     
     await bot.set_state(
@@ -55,8 +55,8 @@ async def result(message: types.Message):
         data['password'] = message.text
     
     await bot.send_message(chat_id=message.chat.id,
-                     text='Запрос отправлен, '
-                          'процесс может занять около 15 секунд.')
+                           text='Запрос отправлен, '
+                                'процесс может занять около 15 секунд.')
     
     client = ParserClient()
     try:
@@ -66,15 +66,17 @@ async def result(message: types.Message):
         if client.get_driver.get_cookie('ltoken_v2'):
             markup = create_reply_keyboard_buttons(message)
             await bot.send_message(chat_id=message.chat.id,
-                             text='Успешный вход, получение наград запущено.',
-                             reply_markup=markup)
+                                   text='Успешный вход, получение наград запущено.',
+                                   reply_markup=markup)
             
             if not get_award(message.chat.id):
-                await bot.send_message('У вас сегодня нет активных отметок.')
+                await bot.send_message(chat_id=message.chat.id,
+                                       text='У вас сегодня нет активных отметок.',
+                                       reply_markup=markup)
     
     except CredentialsError as ex:
         await bot.send_message(chat_id=message.chat.id,
-                         text=ex.__str__())
+                               text=ex.__str__())
     finally:
         await bot.delete_state(message.from_user.id, message.chat.id)
         client.get_driver.quit()
