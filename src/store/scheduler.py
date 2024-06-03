@@ -2,20 +2,21 @@ import datetime
 from random import randint
 from typing import Callable
 
+from aiogram.types import Message
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from apscheduler.schedulers.background import BackgroundScheduler
-
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from src.config import load_config
 JOB_STORES = {
-    'default': SQLAlchemyJobStore(url='sqlite:///sessions//jobs.sqlite')
+    'default': SQLAlchemyJobStore(url=f'sqlite:///{load_config().sessions_folder}\\jobs.sqlite')
 }
 
-scheduler = BackgroundScheduler(
+scheduler = AsyncIOScheduler(
     jobstores=JOB_STORES,
 )
 
 
-def create_task(chat_id: int | str,
-                task_func: Callable) -> None:
+# TODO убрать chat_id
+def create_task(chat_id: int | str,task_func: Callable) -> None:
     hour, minute, second = random_time()
     scheduler.add_job(task_func,
                       'cron',
