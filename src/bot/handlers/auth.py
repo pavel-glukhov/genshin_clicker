@@ -12,6 +12,7 @@ from src.bot.states.auth import AuthState
 from src.bot.store.keyboards import create_reply_keyboard_buttons
 from src.parser.exceptions import CredentialsError
 from src.parser.parser import ParserClient
+from src.store.scheduler import create_task
 from src.store.sessions import is_session_exists
 
 logger = logging.getLogger(__name__)
@@ -59,6 +60,8 @@ async def result(message: Message, data: Dict[str, Any]) -> None:
         markup = create_reply_keyboard_buttons(message)
         await message.answer(text=result_message,
                              reply_markup=markup)
+        create_task(chat_id=chat_id,
+                    task_func=get_award)
 
 
 def _auth_process(client, username, password, chat_id):
@@ -66,7 +69,6 @@ def _auth_process(client, username, password, chat_id):
     auth_result, result_message = wd_client.authentication(username=username,
                                                            password=password,
                                                            chat_id=chat_id)
-    await get_award(chat_id)
     
     wd_client.get_driver.quit()
     return auth_result, result_message

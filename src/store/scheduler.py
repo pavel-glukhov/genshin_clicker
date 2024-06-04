@@ -6,6 +6,7 @@ from aiogram.types import Message
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.config import load_config
+
 JOB_STORES = {
     'default': SQLAlchemyJobStore(url=f'sqlite:///{load_config().sessions_folder}\\jobs.sqlite')
 }
@@ -15,9 +16,12 @@ scheduler = AsyncIOScheduler(
 )
 
 
-# TODO убрать chat_id
-def create_task(chat_id: int | str,task_func: Callable) -> None:
+def create_task(chat_id: int | str, task_func: Callable) -> None:
     hour, minute, second = random_time()
+    
+    if scheduler.get_job(str(chat_id)):
+        scheduler.remove_job(str(chat_id))
+    
     scheduler.add_job(task_func,
                       'cron',
                       hour=hour,
@@ -44,10 +48,3 @@ def random_time(hour_from: int = 00,
     random_second = randint(seconds_from, seconds_to)
     return random_hour, random_minute, random_second
 
-
-def random_datetime() -> datetime:
-    current_datetime = datetime.datetime.now()
-    random_hour, random_minute, random_second = random_time(hour_from=current_datetime.time().hour)
-    random_time_obj = datetime.time(random_hour, random_minute, random_second)
-    result = datetime.datetime.combine(current_datetime.date(), random_time_obj)
-    return result
