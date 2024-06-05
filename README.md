@@ -6,7 +6,7 @@
 
 ### Стек
 1. Selenium
-2. pyTelegramBotAPI
+2. Aiogram
 3. Apscheduler
 
 ### Запуск Бота:

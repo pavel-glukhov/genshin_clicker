@@ -1,8 +1,9 @@
 import logging
 import pickle
+import sys
 import time
 from datetime import datetime
-from selenium.webdriver.chrome.service import Service
+
 from selenium import webdriver
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException,
@@ -11,18 +12,24 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from src.parser.exceptions import CredentialsError, NoAwardsError
+from src.config import load_config
 
 logger = logging.getLogger(__name__)
+
+_thread_target_key, _thread_args_key, _thread_kwargs_key = (
+    ('_target', '_args', '_kwargs')
+    if sys.version_info >= (3, 0) else
+    ('_Thread__target', '_Thread__args', '_Thread__kwargs')
+)
 
 
 class ParserClient:
     def __init__(self):
         self.driver = self._driver_init()
-        self.cookies_folder = 'sessions'
+        self.cookies_folder = load_config().sessions_folder
         self._open_site()
     
-    def authentication(self, username, password, chat_id):
+    def authentication(self, username, password, chat_id) -> tuple[bool, str]:
         try:
             self.driver.find_element(By.CLASS_NAME, "mhy-hoyolab-account-block__avatar").click()
             
@@ -49,19 +56,20 @@ class ParserClient:
             login_button.click()
         
         except (NoSuchElementException, ElementClickInterceptedException):
-            raise CredentialsError("Ошибка входа. Повторите позже")
+            return False, "Ошибка входа. Повторите позже"
         
         try:
             toast_text = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, 'van-toast__text'))
             )
-            raise CredentialsError(toast_text.text)
+            return False, toast_text.text
         
         except (NoSuchElementException, TimeoutException):
             self.export_cookies(f'{self.cookies_folder}\\{chat_id}.pkl')
-            return True
+            return True, 'Авторизация прошла успешно'
     
-    def get_daily_award(self):
+    def get_daily_award(self) -> tuple[bool, dict | str]:
+        
         award_img_src = None
         time.sleep(7)
         try:
@@ -92,12 +100,12 @@ class ParserClient:
                             f' Сегодня ты получил '
                             f'{count_text} ед:')
             
-            return {'img': award_img_src, 'text': message_text}
+            return True, {'img': award_img_src, 'text': message_text}
         
         except (NoSuchElementException, TimeoutException):
-            raise NoAwardsError("User does not have day's awards")
+            return False, "User does not have day's awards"
     
-    def get_next_award_information(self):
+    def get_next_award_information(self) -> tuple[bool, dict | str]:
         try:
             award_text = self.driver.find_element(
                 By.XPATH,
@@ -112,10 +120,10 @@ class ParserClient:
             
             self.driver.find_element("class name",
                                      "components-common-common-dialog-__index_---dialog-close---1Yc84V").click()
-            return {'img': award_img_src, 'text': message_text}
+            return True, {'img': award_img_src, 'text': message_text}
         
         except (NoSuchElementException, AttributeError):
-            raise NoAwardsError("User does not have next day's awards")
+            return False, "User does not have next day's awards"
     
     def export_cookies(self, save_path):
         cookies = self.driver.get_cookies()

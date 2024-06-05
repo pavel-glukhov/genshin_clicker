@@ -4,7 +4,7 @@ services:
   backend:
     build: .
     restart: always
-    command: "python main.py"
+    command: "python src/cli.py"
     volumes:
       - sessions_value:/code/sessions/
     environment:
