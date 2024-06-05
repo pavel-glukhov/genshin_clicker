@@ -1,7 +1,7 @@
 import datetime
 import logging
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
@@ -54,7 +54,7 @@ async def result(message: Message, data: Dict[str, Any]) -> None:
     await message.answer('Время установлено.')
 
 
-def _parse_date(text) -> datetime | bool:
+def _parse_date(text):
     time_format_variants = ['%Y,%m,%d,%H,%M', '%Y %m %d %H:%M',
                             '%Y.%m.%d %H:%M', '%Y\\%m\\%d %H:%M',
                             '%Y/%m/%d %H:%M', '%Y %m %d %H %M']
