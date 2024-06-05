@@ -1,8 +1,9 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from random import randint
 
-from aiogram import F, Router, Bot
+from aiogram import Bot, F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -10,7 +11,6 @@ from aiogram.types import Message
 from src.config import load_config
 from src.parser.parser import ParserClient
 from src.store.scheduler import create_task, scheduler, update_task
-from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ router = Router()
 
 @router.message(Command(commands=["get_award"]))
 @router.message(F.text.lower() == "получить награду 🏆")
-async def request_award(message: Message, state: FSMContext):
+async def request_award(message: Message, state: FSMContext) -> None:
     await message.answer('Запрос на получение сегодняшней награды запущен. '
                          'Процесс может занять около 15 секунд.')
     
@@ -27,7 +27,7 @@ async def request_award(message: Message, state: FSMContext):
         await message.answer('У вас сегодня нет активных отметок.')
 
 
-async def get_award(chat_id: int):
+async def get_award(chat_id: int) -> bool:
     config = load_config()
     bot = Bot(config.token)
     
@@ -47,7 +47,7 @@ async def get_award(chat_id: int):
     return False
 
 
-def _get_award_process(client, chat_id):
+def _get_award_process(client, chat_id) -> dict:
     wd_client = client()
     
     logger.info("Getting award")

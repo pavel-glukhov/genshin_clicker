@@ -18,7 +18,7 @@ router = Router()
 
 @router.message(Command(commands=["sign_out"]))
 @router.message(F.text.lower() == "отключить ❌")
-async def sign_out(message: Message, state: FSMContext):
+async def sign_out(message: Message, state: FSMContext) -> None:
     chat_id = message.chat.id
     session_path = Path(f'{load_config().sessions_folder}\\{chat_id}.pkl')
     if is_session_exists(chat_id):

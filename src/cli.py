@@ -5,15 +5,8 @@ import os
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from src.bot.handlers import (
-    auth,
-    awards,
-    common,
-    set_datetime,
-    start,
-    sign_out,
-    status
-)
+from src.bot.handlers import (auth, awards, common, set_datetime, sign_out,
+                              start, status)
 from src.bot.middlewares.auth_middleware import AuthMiddleware
 from src.config import load_config
 from src.store.scheduler import scheduler
@@ -21,16 +14,14 @@ from src.store.scheduler import scheduler
 logger = logging.getLogger(__name__)
 
 
-def create_session_folder():
-    ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    
-    directory = os.path.join(ROOT_PATH, "sessions")
+def create_session_folder() -> None:
+    directory = load_config().sessions_folder
     
     if not os.path.exists(directory):
         os.makedirs(directory)
 
 
-def register_routers(dp):
+def register_routers(dp) -> None:
     dp.include_router(awards.router)
     dp.include_router(auth.router)
     dp.include_router(set_datetime.router)
@@ -40,7 +31,7 @@ def register_routers(dp):
     dp.include_router(status.router)
 
 
-def register_middlewares():
+def register_middlewares() -> None:
     awards.router.message.middleware(AuthMiddleware())
     start.router.message.middleware(AuthMiddleware())
     set_datetime.router.message.middleware(AuthMiddleware())
@@ -49,7 +40,7 @@ def register_middlewares():
     status.router.message.middleware(AuthMiddleware())
 
 
-async def main():
+async def main() -> None:
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -70,7 +61,7 @@ async def main():
         await bot.session.close()
 
 
-def cli():
+def cli() -> None:
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):

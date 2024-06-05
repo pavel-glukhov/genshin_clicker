@@ -3,6 +3,7 @@ import pickle
 import sys
 import time
 from datetime import datetime
+
 from selenium import webdriver
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException,
@@ -10,8 +11,8 @@ from selenium.common.exceptions import (ElementClickInterceptedException,
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+
 from src.config import load_config
-from src.parser.exceptions import NoAwardsError
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class ParserClient:
         self.cookies_folder = load_config().sessions_folder
         self._open_site()
     
-    def authentication(self, username, password, chat_id):
+    def authentication(self, username, password, chat_id) -> tuple[bool, str]:
         try:
             self.driver.find_element(By.CLASS_NAME, "mhy-hoyolab-account-block__avatar").click()
             
@@ -67,7 +68,8 @@ class ParserClient:
             self.export_cookies(f'{self.cookies_folder}\\{chat_id}.pkl')
             return True, 'Авторизация прошла успешно'
     
-    def get_daily_award(self):
+    def get_daily_award(self) -> tuple[bool, dict | str]:
+        
         award_img_src = None
         time.sleep(7)
         try:
@@ -103,7 +105,7 @@ class ParserClient:
         except (NoSuchElementException, TimeoutException):
             return False, "User does not have day's awards"
     
-    def get_next_award_information(self):
+    def get_next_award_information(self) -> tuple[bool, dict | str]:
         try:
             award_text = self.driver.find_element(
                 By.XPATH,
@@ -121,7 +123,7 @@ class ParserClient:
             return True, {'img': award_img_src, 'text': message_text}
         
         except (NoSuchElementException, AttributeError):
-            return False, NoAwardsError("User does not have next day's awards")
+            return False, "User does not have next day's awards"
     
     def export_cookies(self, save_path):
         cookies = self.driver.get_cookies()

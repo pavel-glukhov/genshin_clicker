@@ -1,16 +1,15 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict
 
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from concurrent.futures import ThreadPoolExecutor
 
 from src.bot.handlers.awards import get_award
 from src.bot.states.auth import AuthState
 from src.bot.store.keyboards import create_reply_keyboard_buttons
-from src.parser.exceptions import CredentialsError
 from src.parser.parser import ParserClient
 from src.store.scheduler import create_task
 from src.store.sessions import is_session_exists
@@ -22,7 +21,7 @@ router = Router()
 
 @router.message(Command(commands=["login"]))
 @router.message(F.text.lower() == "авторизоваться ➡️")
-async def start_login(message: Message, state: FSMContext):
+async def start_login(message: Message, state: FSMContext) -> None:
     if is_session_exists(message.chat.id):
         await message.answer(
             text="Вы уже авторизованы",
@@ -64,7 +63,7 @@ async def result(message: Message, data: Dict[str, Any]) -> None:
                     task_func=get_award)
 
 
-def _auth_process(client, username, password, chat_id):
+def _auth_process(client, username, password, chat_id) -> tuple:
     wd_client = client()
     auth_result, result_message = wd_client.authentication(username=username,
                                                            password=password,

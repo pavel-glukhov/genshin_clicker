@@ -11,7 +11,7 @@ from aiogram.types import Message
 from src.bot.handlers.awards import get_award
 from src.bot.states.set_datetime import DateTimeStates
 from src.bot.store.keyboards import create_reply_keyboard_buttons
-from src.store.scheduler import update_task, scheduler, create_task
+from src.store.scheduler import create_task, scheduler, update_task
 from src.store.sessions import is_session_exists
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ router = Router()
 
 @router.message(StateFilter(None), Command(commands=["set_datetime"]))
 @router.message(F.text.lower() == "указать время ➡️")
-async def start_login(message: Message, state: FSMContext):
+async def start_login(message: Message, state: FSMContext) -> None:
     chat_id = message.chat.id
     if is_session_exists(chat_id):
         await state.set_state(DateTimeStates.datetime)
@@ -42,7 +42,7 @@ async def process_login(message: Message, state: FSMContext) -> None:
     await result(message=message, data=data)
 
 
-async def result(message: Message, data: Dict[str, Any]):
+async def result(message: Message, data: Dict[str, Any]) -> None:
     new_datetime = _parse_date(data.get('datetime'))
     if scheduler.get_job(str(message.chat.id)):
         update_task(message.chat.id,
@@ -54,7 +54,7 @@ async def result(message: Message, data: Dict[str, Any]):
     await message.answer('Время установлено.')
 
 
-def _parse_date(text):
+def _parse_date(text) -> datetime | bool:
     time_format_variants = ['%Y,%m,%d,%H,%M', '%Y %m %d %H:%M',
                             '%Y.%m.%d %H:%M', '%Y\\%m\\%d %H:%M',
                             '%Y/%m/%d %H:%M', '%Y %m %d %H %M']

@@ -5,6 +5,7 @@ from typing import Callable
 from aiogram.types import Message
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 from src.config import load_config
 
 JOB_STORES = {

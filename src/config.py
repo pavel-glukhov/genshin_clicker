@@ -14,7 +14,7 @@ class Config:
     sessions_folder: str
 
 
-def load_config():
+def load_config() -> Config:
     return Config(
         token=os.getenv('TELEGRAM_TOKEN'),
         sessions_folder=os.path.join(ROOT_PATH, 'sessions')
