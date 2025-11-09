@@ -5,7 +5,7 @@ import os
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from src.bot.handlers import (auth, awards, common, set_datetime, sign_out,
+from src.bot.handlers import (auth, awards, common, sign_out,
                               start, status)
 from src.bot.middlewares.auth_middleware import AuthMiddleware
 from src.config import load_config
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def create_session_folder() -> None:
     directory = load_config().sessions_folder
-    
+
     if not os.path.exists(directory):
         os.makedirs(directory)
 
@@ -24,7 +24,6 @@ def create_session_folder() -> None:
 def register_routers(dp) -> None:
     dp.include_router(awards.router)
     dp.include_router(auth.router)
-    dp.include_router(set_datetime.router)
     dp.include_router(common.router)
     dp.include_router(start.router)
     dp.include_router(sign_out.router)
@@ -34,7 +33,6 @@ def register_routers(dp) -> None:
 def register_middlewares() -> None:
     awards.router.message.middleware(AuthMiddleware())
     start.router.message.middleware(AuthMiddleware())
-    set_datetime.router.message.middleware(AuthMiddleware())
     common.router.message.middleware(AuthMiddleware())
     sign_out.router.message.middleware(AuthMiddleware())
     status.router.message.middleware(AuthMiddleware())
@@ -49,12 +47,13 @@ async def main() -> None:
     config = load_config()
     dp = Dispatcher(storage=MemoryStorage())
     bot = Bot(config.token)
-    
+
     register_routers(dp)
     register_middlewares()
     create_session_folder()
     scheduler.start()
     try:
+        await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
     finally:
         await dp.storage.close()

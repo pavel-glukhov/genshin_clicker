@@ -1,8 +1,7 @@
 import datetime
 from random import randint
 from typing import Callable
-
-from aiogram.types import Message
+from datetime import datetime, timedelta
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -17,35 +16,71 @@ scheduler = AsyncIOScheduler(
 )
 
 
-def create_task(chat_id: int | str, task_func: Callable) -> None:
-    hour, minute, second = random_time()
-    
+def create_task(
+        chat_id: int | str,
+        task_func: Callable,
+        hours_random_range: tuple[int, int] = (0, 2),
+        minutes_random_range: tuple[int, int] = (0, 59),
+        seconds_random_range: tuple[int, int] = (0, 59)
+) -> None:
+    """
+    Creates a task to run in 24 hours with a random offset.
+
+    :param chat_id: chat id (used as the job id)
+    :param task_func: the function to be executed
+    :param hours_random_range: range of random hour offset (e.g., (0, 2))
+    :param minutes_random_range: range of random minute offset (e.g., (0, 59))
+    :param seconds_random_range: range of random second offset (e.g., (0, 59))
+    """
+
+    base_time = datetime.now() + timedelta(days=1)
+
+    random_hours = randint(*hours_random_range)
+    random_minutes = randint(*minutes_random_range)
+    random_seconds = randint(*seconds_random_range)
+
+    run_time = base_time + timedelta(
+        hours=random_hours,
+        minutes=random_minutes,
+        seconds=random_seconds
+    )
+
     if scheduler.get_job(str(chat_id)):
         scheduler.remove_job(str(chat_id))
-    
-    scheduler.add_job(task_func,
-                      'cron',
-                      hour=hour,
-                      minute=minute,
-                      id=str(chat_id),
-                      args=[chat_id],
-                      misfire_grace_time=18000)
+
+    scheduler.add_job(
+        task_func,
+        'date',
+        run_date=run_time,
+        id=str(chat_id),
+        args=[chat_id],
+        misfire_grace_time=18000
+    )
 
 
-def update_task(chat_id: int | str, trigger_kwargs) -> None:
-    scheduler.reschedule_job(job_id=str(chat_id),
-                             **trigger_kwargs)
+def update_task(
+        chat_id: int | str,
+        hours_range: tuple[int, int] = (12, 14),
+        minutes_range: tuple[int, int] = (0, 59)
+) -> None:
+    """
+    Reschedules an existing task for the given chat_id with a random delay.
 
+    The new execution time will be current time + random hours + random minutes.
 
-def random_time(hour_from: int = 00,
-                hour_to: int = 23,
-                minutes_from: int = 0,
-                minutes_to: int = 59,
-                seconds_from: int = 0,
-                seconds_to: int = 59,
-                ) -> tuple[int, int, int]:
-    random_hour = randint(hour_from, hour_to)
-    random_minute = randint(minutes_from, minutes_to)
-    random_second = randint(seconds_from, seconds_to)
-    return random_hour, random_minute, random_second
+    :param chat_id: ID of the chat (used as the job ID)
+    :param hours_range: range of hours to add (inclusive)
+    :param minutes_range: range of minutes to add (inclusive)
+    """
+    current_datetime = datetime.now()
+    random_delay = timedelta(
+        hours=randint(*hours_range),
+        minutes=randint(*minutes_range)
+    )
+    new_datetime = current_datetime + random_delay
 
+    scheduler.reschedule_job(
+        job_id=str(chat_id),
+        trigger='date',
+        run_date=new_datetime
+    )

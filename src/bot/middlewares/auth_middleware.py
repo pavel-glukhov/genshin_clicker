@@ -1,7 +1,6 @@
 from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
-from aiogram.dispatcher.event.bases import CancelHandler
 from aiogram.types import Message
 
 from src.store.sessions import is_session_exists

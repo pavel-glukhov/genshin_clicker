@@ -22,19 +22,21 @@ router = Router()
 async def request_award(message: Message, state: FSMContext) -> None:
     await message.answer('Запрос на получение сегодняшней награды запущен. '
                          'Процесс может занять около 15 секунд.')
-    
+
     if not await get_award(message.chat.id):
-        await message.answer('У вас сегодня нет активных отметок.')
+        job = scheduler.get_job(str(message.chat.id))
+        await message.answer('У вас сегодня нет активных отметок.\n'
+                             f'Следующий запуск: {job.next_run_time.strftime("%d-%m-%Y %H:%M")}')
 
 
 async def get_award(chat_id: int) -> bool:
     config = load_config()
     bot = Bot(config.token)
-    
+
     with ThreadPoolExecutor() as executor:
         future = executor.submit(_get_award_process, ParserClient, chat_id)
         data = future.result()
-    
+
     if data.get('daily_award_result'):
         await bot.send_photo(chat_id=chat_id,
                              photo=data.get('daily_award_data').get('img'),
@@ -49,26 +51,20 @@ async def get_award(chat_id: int) -> bool:
 
 def _get_award_process(client, chat_id) -> dict:
     wd_client = client()
-    
+
     logger.info("Getting award")
     wd_client.import_cookies(f'{chat_id}.pkl')
     daily_award_result, daily_award_data = wd_client.get_daily_award()
     next_award_result, next_award_data = wd_client.get_next_award_information()
-    
+
     if scheduler.get_job(str(chat_id)):
-        current_datetime = datetime.now()
-        time_difference = timedelta(hours=randint(12, 14),
-                                    minutes=randint(0, 59))
-        new_datetime = current_datetime + time_difference
-        update_task(chat_id,
-                    trigger_kwargs={'trigger': 'date',
-                                    'run_date': new_datetime})
+        update_task(chat_id)
     else:
         create_task(chat_id=chat_id,
                     task_func=get_award)
     wd_client.get_driver.quit()
     logger.info("Driver has been closed.")
-    
+
     return {'daily_award_result': daily_award_result,
             'daily_award_data': daily_award_data,
             'next_award_result': next_award_result,
