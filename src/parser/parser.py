@@ -208,13 +208,11 @@ class ParserClient:
         options.add_argument("--mute-audio")
         options.add_argument("--log-level=3")
 
-        # anti detecter
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_experimental_option("detach", True)
 
-        # real useragent
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                              "AppleWebKit/537.36 (KHTML, like Gecko) "
                              "Chrome/119.0.0.0 Safari/537.36")
@@ -222,7 +220,6 @@ class ParserClient:
         driver = webdriver.Chrome(options=options)
         driver.implicitly_wait(15)
 
-        # Hide webdriver by JS
         driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
             "source": """
             Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
