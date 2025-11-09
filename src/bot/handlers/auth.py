@@ -6,6 +6,7 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
+from aiogram.types import Message as TgMessage
 
 from src.bot.handlers.awards import get_award
 from src.bot.states.auth import AuthState
@@ -19,31 +20,50 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
+
 @router.message(Command(commands=["login"]))
 @router.message(F.text.lower() == "авторизоваться ➡️")
 async def start_login(message: Message, state: FSMContext) -> None:
     if is_session_exists(message.chat.id):
-        await message.answer(
-            text="✅ Вы уже авторизованы",
-        )
-        return None
-    
+        await message.answer(text="✅ Вы уже авторизованы")
+        return
+
     await state.set_state(AuthState.username)
-    await message.answer(text="Логин:")
+    bot_msg: TgMessage = await message.answer("Логин:")
+    await state.update_data(last_bot_msg_id=bot_msg.message_id)
 
 
 @router.message(AuthState.username)
 async def process_login(message: Message, state: FSMContext) -> None:
+    await message.delete()
     await state.update_data(username=message.text)
+
+    data = await state.get_data()
+    if "last_bot_msg_id" in data:
+        try:
+            await message.bot.delete_message(chat_id=message.chat.id, message_id=data["last_bot_msg_id"])
+        except:
+            pass
+
     await state.set_state(AuthState.password)
-    await message.answer("Твой пароль:")
+    bot_msg = await message.answer("Твой пароль:")
+    await state.update_data(last_bot_msg_id=bot_msg.message_id)
 
 
 @router.message(AuthState.password)
 async def process_login(message: Message, state: FSMContext) -> None:
+    await message.delete()
     data = await state.update_data(password=message.text)
+
+    prev_data = await state.get_data()
+    if "last_bot_msg_id" in prev_data:
+        try:
+            await message.bot.delete_message(chat_id=message.chat.id, message_id=prev_data["last_bot_msg_id"])
+        except:
+            pass
+
     await state.clear()
-    await message.answer("⚠️ Запрос на авторизацию отправлен. Процесс может занять до 15 сек.")
+    bot_msg = await message.answer("⚠️ Запрос на авторизацию отправлен. Процесс может занять до 15 сек.")
     await result(message=message, data=data)
 
 
