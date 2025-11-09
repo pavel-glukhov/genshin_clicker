@@ -16,7 +16,7 @@ router = Router()
 async def cmd_start(message: Message, state: FSMContext) -> None:
     await state.clear()
     markup = create_reply_keyboard_buttons(message)
-    text_message = ('Вы авторизованы.\n'
+    text_message = ('✅ Вы авторизованы.\n'
                     'Для удаления вашей сессии, нажмите "Отключить ❌"')
     
     await message.answer(text=text_message,

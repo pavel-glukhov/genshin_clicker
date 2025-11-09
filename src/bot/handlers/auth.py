@@ -24,7 +24,7 @@ router = Router()
 async def start_login(message: Message, state: FSMContext) -> None:
     if is_session_exists(message.chat.id):
         await message.answer(
-            text="Вы уже авторизованы",
+            text="✅ Вы уже авторизованы",
         )
         return None
     
@@ -43,7 +43,7 @@ async def process_login(message: Message, state: FSMContext) -> None:
 async def process_login(message: Message, state: FSMContext) -> None:
     data = await state.update_data(password=message.text)
     await state.clear()
-    await message.answer("Запрос на авторизацию отправлен. Процесс может занять до 15 сек.")
+    await message.answer("⚠️ Запрос на авторизацию отправлен. Процесс может занять до 15 сек.")
     await result(message=message, data=data)
 
 

@@ -57,7 +57,7 @@ class ParserClient:
             login_button.click()
 
         except (NoSuchElementException, ElementClickInterceptedException):
-            return False, "Ошибка входа. Повторите позже"
+            return False, "❗️Ошибка входа. Повторите позже"
 
         try:
             toast_text = WebDriverWait(self.driver, 10).until(
@@ -67,7 +67,7 @@ class ParserClient:
 
         except (NoSuchElementException, TimeoutException):
             self.export_cookies(f'{self.cookies_folder}\\{chat_id}.pkl')
-            return True, 'Авторизация прошла успешно'
+            return True, '✅ Авторизация прошла успешно'
 
     def get_daily_award(self) -> tuple[bool, dict | str]:
 
@@ -98,7 +98,7 @@ class ParserClient:
 
             message_text = (f'{datetime.now().strftime("%A")} '
                             f'({day}).'
-                            f' Сегодня ты получил '
+                            f'Сегодня ты получил '
                             f'{count_text} ед:')
 
             return True, {'img': award_img_src, 'text': message_text}

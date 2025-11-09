@@ -26,7 +26,7 @@ async def sign_out(message: Message, state: FSMContext) -> None:
         if scheduler.get_job(str(message.chat.id)):
             scheduler.remove_job(str(message.chat.id))
     
-    message_text = 'Сессия удалена.'
+    message_text = '✅ Сессия удалена.'
     
     await message.answer(text=message_text,
                          reply_markup=create_reply_keyboard_buttons(message))

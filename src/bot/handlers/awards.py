@@ -20,12 +20,12 @@ router = Router()
 @router.message(Command(commands=["get_award"]))
 @router.message(F.text.lower() == "получить награду 🏆")
 async def request_award(message: Message, state: FSMContext) -> None:
-    await message.answer('Запрос на получение сегодняшней награды запущен. '
+    await message.answer('⚠️ Запрос на получение сегодняшней награды запущен. '
                          'Процесс может занять около 15 секунд.')
 
     if not await get_award(message.chat.id):
         job = scheduler.get_job(str(message.chat.id))
-        await message.answer('У вас сегодня нет активных отметок.\n'
+        await message.answer('⚠️ У вас сегодня нет активных отметок.\n'
                              f'Следующий запуск: {job.next_run_time.strftime("%d-%m-%Y %H:%M")}')
 
 

@@ -17,7 +17,7 @@ router = Router()
 async def status(message: Message, state: FSMContext) -> None:
     job = scheduler.get_job(str(message.chat.id))
     if job:
-        await message.answer(f'Запущен. Следующий запуск '
+        await message.answer(f'✅ Запущен. Следующий запуск '
                              f'{job.next_run_time.strftime("%d-%m-%Y %H:%M")}')
     else:
-        await message.answer(f'Не запущен.')
+        await message.answer(f'❗️Не запущен.')
