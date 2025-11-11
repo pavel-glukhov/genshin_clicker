@@ -7,7 +7,7 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         NoSuchElementException,
-                                        TimeoutException)
+                                        TimeoutException, WebDriverException)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -26,19 +26,26 @@ _thread_target_key, _thread_args_key, _thread_kwargs_key = (
 class ParserClient:
     def __init__(self):
         self.driver = self._driver_init()
-        self.log_browser_visibility()
+        # self.log_browser_visibility()
         self.cookies_folder = load_config().sessions_folder
         self._open_site()
 
     def authentication(self, username, password, chat_id) -> tuple[bool, str]:
+        WAIT_SHORT = 10
+        WAIT_MEDIUM = 20
+
         try:
-            self.driver.find_element(By.CLASS_NAME, "mhy-hoyolab-account-block__avatar").click()
+            WebDriverWait(self.driver, WAIT_SHORT).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "mhy-hoyolab-account-block__avatar"))
+            ).click()
 
             self.driver.switch_to.frame('hyv-account-frame')
 
-            dialog_element = WebDriverWait(self.driver, 15).until(EC.presence_of_element_located(
-                (By.XPATH,
-                 '//div[@class="el-dialog hyv-web-login-dialog iframe-level-1"]')))
+            dialog_element = WebDriverWait(self.driver, WAIT_MEDIUM).until(
+                EC.presence_of_element_located(
+                    (By.XPATH,
+                     '//div[@class="el-dialog hyv-web-login-dialog iframe-level-1"]'))
+            )
 
             username_form = dialog_element.find_element(By.CSS_SELECTOR,
                                                         "input.el-input__inner[type='text']")
@@ -47,7 +54,7 @@ class ParserClient:
             username_form.send_keys(username)
             password_form.send_keys(password)
 
-            general_credentials_form = WebDriverWait(self.driver, 15).until(
+            general_credentials_form = WebDriverWait(self.driver, WAIT_SHORT).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "cmn-form-web")))
 
             login_button = general_credentials_form.find_element(
@@ -56,18 +63,27 @@ class ParserClient:
 
             login_button.click()
 
-        except (NoSuchElementException, ElementClickInterceptedException):
-            return False, "❗️Ошибка входа. Повторите позже"
+        except (NoSuchElementException, ElementClickInterceptedException, WebDriverException) as e:
+            print(f"Ошибка на этапе ввода/клика: {e}")
+            return False, "❗️Ошибка входа. Повторите позже или проверьте соединение."
+
+        except TimeoutException:
+            return False, "⏳ Превышен таймаут авторизации (более 1 минуты). Пожалуйста, попробуйте позже."
+
 
         try:
-            toast_text = WebDriverWait(self.driver, 10).until(
+            toast_text = WebDriverWait(self.driver, WAIT_SHORT).until(
                 EC.presence_of_element_located((By.CLASS_NAME, 'van-toast__text'))
             )
             return False, toast_text.text
 
-        except (NoSuchElementException, TimeoutException):
-            self.export_cookies(f'{self.cookies_folder}\\{chat_id}.pkl')
-            return True, '✅ Авторизация прошла успешно'
+        except TimeoutException:
+            try:
+                self.export_cookies(f'{self.cookies_folder}\\{chat_id}.pkl')
+                return True, '✅ Авторизация прошла успешно'
+            except Exception as e:
+                print(f"Ошибка при экспорте куки: {e}")
+                return False, "❗️Авторизация успешна, но не удалось сохранить куки."
 
     def get_daily_award(self) -> tuple[bool, dict | str]:
 
